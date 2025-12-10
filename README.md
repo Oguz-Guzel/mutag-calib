@@ -208,7 +208,7 @@ Merge outputs and produce plots with similar commands as in Step 2.
 ### Step 3: Produce fit shapes and combine datacards
 In order to produce the fit shapes and combine datacards for the fit, a dedicated script can be run with the following command:
 ```bash
-python mutag_calib/scripts/create_datacards.py fit_templates/output_all.coffea --years 2022_preEE 2022_postEE 2023_preBPix 2023_PostBPix
+python mutag_calib/scripts/create_datacards.py fit_templates/output_all.coffea --years 2022_preEE 2022_postEE 2023_preBPix 2023_postBPix
 ```
 The script will create a folder `fit_templates/datacards` containing a system of subfolders organized by data-taking era, category, $\tau_{21}$ cut and pass/fail regions. The folder will have the following structure:
 ```bash
