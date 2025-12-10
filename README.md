@@ -13,7 +13,7 @@ by running the following commands:
 git clone git@github.com:mmarchegiani/mutag-calib.git
 
 #Enter the Singularity image
-apptainer shell --bind /afs -B /cvmfs/cms.cern.ch \
+apptainer shell --bind /afs -B /cvmfs/cms.cern.ch -B /cvmfs/cms-griddata.cern.ch \
          --bind /tmp  --bind /eos/cms/ -B /etc/sysconfig/ngbauth-submit \
          -B ${XDG_RUNTIME_DIR}  --env KRB5CCNAME="FILE:${XDG_RUNTIME_DIR}/krb5cc"  \
          /cvmfs/unpacked.cern.ch/gitlab-registry.cern.ch/cms-analysis/general/pocketcoffea:lxplus-el9-latest
@@ -35,7 +35,7 @@ export PYTHONPATH=`pwd`
 Now the environment is setup. In order to use this environment in the future, just run:
 ```bash
 # Enter the Singularity image
-apptainer shell --bind /afs -B /cvmfs/cms.cern.ch \
+apptainer shell --bind /afs -B /cvmfs/cms.cern.ch -B /cvmfs/cms-griddata.cern.ch \
          --bind /tmp  --bind /eos/cms/ -B /etc/sysconfig/ngbauth-submit \
          -B ${XDG_RUNTIME_DIR}  --env KRB5CCNAME="FILE:${XDG_RUNTIME_DIR}/krb5cc"  \
          /cvmfs/unpacked.cern.ch/gitlab-registry.cern.ch/cms-analysis/general/pocketcoffea:lxplus-el9-latest
@@ -52,7 +52,7 @@ export PYTHONPATH=`pwd`
 > To avoid typing the long `apptainer shell` command every time, you can create an alias in your `~/.bashrc` file:
 >
 > ```bash
-> alias sing='apptainer shell --bind /afs -B /cvmfs/cms.cern.ch --bind /tmp --bind /eos/cms/ -B /etc/sysconfig/ngbauth-submit -B ${XDG_RUNTIME_DIR} --env KRB5CCNAME="FILE:${XDG_RUNTIME_DIR}/krb5cc" /cvmfs/unpacked.cern.ch/gitlab-registry.cern.ch/cms-analysis/general/pocketcoffea:lxplus-el9-latest'
+> alias sing='apptainer shell --bind /afs -B /cvmfs/cms.cern.ch -B /cvmfs/cms-griddata.cern.ch --bind /tmp --bind /eos/cms/ -B /etc/sysconfig/ngbauth-submit -B ${XDG_RUNTIME_DIR} --env KRB5CCNAME="FILE:${XDG_RUNTIME_DIR}/krb5cc" /cvmfs/unpacked.cern.ch/gitlab-registry.cern.ch/cms-analysis/general/pocketcoffea:lxplus-el9-latest'
 > ```
 >
 > After adding this alias, you can simply type `sing` to enter the Singularity image!
@@ -62,7 +62,7 @@ The folder `workflows` contains different PocketCoffea workflows that are needed
 Here is their description:
 
 - `pt_reweighting.py`: defines the `ptReweightProcessor` to compute the MC-to-data reweighting based on the 3D map in jet ($p_T$, $\eta$, $\tau_{21}$). It needs to be run once to compute the 3D reweighting map, that is then saved and used as a parameter for the next workflows.
-- `fatjet_base.py`: defines the `fatjetBaseProcessor` that applies the custom object preselection needed for the calibration, creates all the branches that are counting the number of muons within the AK8 jet and creates branches specific to the taggers. **For Run 3 analyses, the definition of the tagger branches might have to be redefined here.**
+- `fatjet_base.py`: defines the `fatjetBaseProcessor` that applies the custom object preselection needed for the calibration, creates all the branches that are counting the number of muons within the AK8 jet and creates branches specific to the taggers.
 - `mutag_processor.py`: defines the `mutagAnalysisProcessor` on top of `fatjetBaseProcessor`. It applies the $p_T$ and $M_{SD}$ cuts on the AK8 jet collection and applies the 3D reweighting to MC.
 - `mutag_oneMuAK8_processor.py`: defines the `mutagAnalysisOneMuonInAK8Processor` on top of `mutagAnalysisProcessor`. It applies the selection on AK8 jets based on the number of soft muons contained in the AK8 jet (>=1 soft muon within the AK8 jet).
 
@@ -86,6 +86,12 @@ Datasets to be included for Run 3:
     - [x] QCD_HT
   - Validations
     - [ ] ggH(bb) and ggH(cc) signals (for validations)
+
+⚠️ **Warning:** before entering in the singularity image, you need to run the command to get the GRID certificate:
+```bash
+voms-proxy-init --rfc --voms cms -valid 192:00
+```
+Now the GRID certificate is setup and you can enter in the singularity image.
 
 To create json datasets, run the `build-datasets` command for each dataset definition file in the `datasets` folder:
 ```bash
