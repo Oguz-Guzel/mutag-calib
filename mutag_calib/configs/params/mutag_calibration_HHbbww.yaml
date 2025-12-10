@@ -24,17 +24,13 @@ mutag_calibration:
       - [425, 'Inf']
   msd_binning:
     2022_preEE:
-      - [40, 'Inf']
-      - [80, 170]
+      - [30, 'Inf']
     2022_postEE:
-      - [40, 'Inf']
-      - [80, 170]
+      - [30, 'Inf']
     2023_preBPix:
-      - [40, 'Inf']
-      - [80, 170]
+      - [30, 'Inf']
     2023_postBPix:
-      - [40, 'Inf']
-      - [80, 170]
+      - [30, 'Inf']
   wp:
     2022_preEE:
       particleNetWithMass_HbbvsQCD:
