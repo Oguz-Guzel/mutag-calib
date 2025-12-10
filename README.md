@@ -147,6 +147,8 @@ pocket-coffea run --cfg mutag_calib/configs/pt_reweighting/ptreweighting_run3.py
 
 After merging the output files with the `merge-outputs` command, it is possible to plot all the histograms and produce the 3D reweighting map.
 
+`pocket-coffea merge-outputs -o pt_reweighting/output_all.coffea pt_reweighting/*.coffea -f -v`
+
 Produce the plots of all 1D histograms with:
 ```bash
 cd pt_reweighting
