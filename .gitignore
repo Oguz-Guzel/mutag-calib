@@ -7,7 +7,6 @@ mutag_calib/configs/fatjet_base/custom/__pycache__
 mutag_calib/configs/pt_reweighting/__pycache__
 mutag_calib/workflows/__pycache__
 mutag_calib/lib/__pycache__
-pt_reweighting_Run3
+pt_reweighting*
 pt_3d_reweighting_Run3
-fit_templates_HHbbtt
-fit_templates_HHbbtt/plot_test
+fit_templates*
