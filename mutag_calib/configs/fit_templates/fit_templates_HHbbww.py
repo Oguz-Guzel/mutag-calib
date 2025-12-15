@@ -99,6 +99,7 @@ msd_binning = parameters["mutag_calibration"]["msd_binning"]["2022_preEE"]
 
 common_cats = {
     "inclusive" : [passthrough],
+    "pt300msd30" : [get_ptmsd(300., 30.)],
     "pt300msd40" : [get_ptmsd(300., 40.)],
     "pt300msd60" : [get_ptmsd(300., 60.)],
     "pt300msd80" : [get_ptmsd(300., 80.)],
