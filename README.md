@@ -272,6 +272,11 @@ combine -M FitDiagnostics -d workspace.root --saveWorkspace \
 
 Note that the `--redefineSignalPOIs=r,SF_c,SF_light` is added to the combine command in order to perform a fit with 3 POIs to measure the b, c and light SFs simultaneously. For the calibration of bb taggers such as `ParticleNetXbbVsQCD`, it is sometimes necessary to freeze the light SF by adding `--setParameters SF_light=1 --freezeParameters SF_light`, since in the pass region of this tagger the light jets are negligible and the light SF cannot be measured.
 
+To run all the combine fits for all the categories and $\tau_{21}$ cuts, you can use the `mutag_calib/scripts/fit/run_all_combine_fits.sh` script:
+```bash
+source mutag_calib/scripts/fit/run_all_combine_fits.sh fit_templates/datacards/ HHbbtt
+```
+
 To export the extracted scalefactors to correctionlib json files, you can use the `mutag_calib/scripts/export_sf_to_json.py` script:
 ```bash
 python mutag_calib/scripts/export_correctionlib.py --datacards-dir fit_templates/datacards/ --output-dir ./ --pt-pattern "*Pt-300toInf_*" --eras 2022_preEE,2022_postEE,2023_preBPix,2023_postBPix --output ak8_sf_corrections_bbww_300toInf
