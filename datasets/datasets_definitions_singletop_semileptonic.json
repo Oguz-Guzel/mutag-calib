@@ -1,7 +1,7 @@
 {     
     "TWminustoLNu2Q": {
         "sample": "SingleTop",
-        "json_output": "datasets/MC_singletop.json",
+        "json_output": "datasets/MC_singletop_run3.json",
         "description": "Cross-section taken from AN2024-081_v8",
         "files": [
             { 

@@ -1,0 +1,19 @@
+{
+  "TTto4Q": {
+    "sample": "TTto4Q",
+    "json_output": "datasets/MC_TTto4Q_run3_2024.json",
+    "description": "Cross-section taken from AN2024-081_v8",
+    "files": [
+      {
+        "das_names": [
+          "/TTto4Q_TuneCP5_13p6TeV_powheg-pythia8/RunIII2024Summer24NanoAODv15-150X_mcRun3_2024_realistic_v2-v2/NANOAODSIM"
+        ],
+        "metadata": {
+          "year": "2024",
+          "isMC": true,
+          "xsec": 419.69
+        }
+      }
+    ]
+  }
+}

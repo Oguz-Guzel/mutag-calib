@@ -1,0 +1,16 @@
+{
+    "TTto4Q_2024": {
+        "metadata": {
+            "das_names": "['/TTto4Q_TuneCP5_13p6TeV_powheg-pythia8/RunIII2024Summer24NanoAODv15-150X_mcRun3_2024_realistic_v2-v2/NANOAODSIM']",
+            "sample": "TTto4Q",
+            "year": "2024",
+            "isMC": "True",
+            "xsec": "419.69",
+            "nevents": "472535695",
+            "size": "1489775270959"
+        },
+        "files": [
+            "root://xrootd-cms.infn.it///store/mc/RunIII2024Summer24NanoAODv15/TTto4Q_TuneCP5_13p6TeV_powheg-pythia8/NANOAODSIM/150X_mcRun3_2024_realistic_v2-v2/120000/4b74f791-673b-4b21-be3e-c9287790bc40.root"
+        ]
+    }
+}
