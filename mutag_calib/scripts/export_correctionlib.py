@@ -180,10 +180,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--datacards-dir",
-        default=os.path.join(
-            os.path.dirname(__file__), "fit_templates", "datacards"
-        ),
-        help="Base datacards directory",
+        help="Datacards directory in fit_templates/",
     )
     parser.add_argument(
         "--output",
