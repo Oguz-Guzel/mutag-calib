@@ -116,8 +116,8 @@ def _hhbbww_per_jet_variations(corr, pt_flat, counts):
 
 def _hhbbww_variations(corr_bb, corr_cc, pt_flat, counts, flavor_flat, nbh_flat, nch_flat):
     """Per-jet SF choosing bb or cc map based on gen flavor; others get weight 1."""
-    mask_bb = (flavor_flat == 5) & (nbh_flat >= 2)
-    mask_cc = (flavor_flat == 4) & (nch_flat >= 2) & (nbh_flat == 0)
+    mask_bb = ak.unflatten((flavor_flat == 5) & (nbh_flat >= 2), counts)
+    mask_cc = ak.unflatten((flavor_flat == 4) & (nch_flat >= 2) & (nbh_flat == 0), counts)
 
     # Evaluate both correction sets
     bb_vars = _hhbbww_per_jet_variations(corr_bb, pt_flat, counts)
@@ -144,10 +144,20 @@ def sf_hhbbww(events, year, systematic="nominal"):
     pt = events.FatJetGood.pt
     counts = ak.num(pt)
     pt_flat = ak.flatten(pt)
+    idx = ak.local_index(pt)
 
-    flavor_flat = ak.flatten(events.FatJetGood.hadronFlavour)
-    nbh_flat = ak.flatten(events.FatJetGood.nBHadrons)
-    nch_flat = ak.flatten(events.FatJetGood.nCHadrons)
+    n_flavor = ak.num(events.FatJetGood.hadronFlavour)
+    n_bh = ak.num(events.FatJetGood.nBHadrons)
+    n_ch = ak.num(events.FatJetGood.nCHadrons)
+
+    # Align jet attributes to the pt jagged structure; fill missing entries with zeros.
+    flavor = ak.where(idx < n_flavor, events.FatJetGood.hadronFlavour, 0)
+    nbh = ak.where(idx < n_bh, events.FatJetGood.nBHadrons, 0)
+    nch = ak.where(idx < n_ch, events.FatJetGood.nCHadrons, 0)
+
+    flavor_flat = ak.flatten(flavor)
+    nbh_flat = ak.flatten(nbh)
+    nch_flat = ak.flatten(nch)
 
     per_jet_variants = _hhbbww_variations(corr_bb, corr_cc, pt_flat, counts, flavor_flat, nbh_flat, nch_flat)
     if systematic not in per_jet_variants:
