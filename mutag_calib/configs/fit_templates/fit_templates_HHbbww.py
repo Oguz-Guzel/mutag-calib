@@ -10,11 +10,7 @@ from pocket_coffea.parameters.histograms import *
 import mutag_calib
 from mutag_calib.configs.fatjet_base.custom.cuts import get_ptmsd, get_ptmsd_window, get_nObj_minmsd, get_flavor, get_ptbin, get_msdbin
 from mutag_calib.configs.fatjet_base.custom.functions import get_inclusive_wp
-from mutag_calib.configs.fatjet_base.custom.weights import (
-    SF_trigger_prescale,
-    SF_ptetatau21_reweighting,
-    SF_hhbbww,
-)
+from mutag_calib.configs.fatjet_base.custom.weights import SF_trigger_prescale, SF_hhbbww
 import mutag_calib.workflows.mutag_oneMuAK8_processor as workflow
 from mutag_calib.workflows.mutag_oneMuAK8_processor import mutagAnalysisOneMuonInAK8Processor
 import os
@@ -51,8 +47,8 @@ variations_by_sample = {}
 for sample in samples:
     if "DATA" in sample:
         continue
-    weights_by_sample[sample] = {"inclusive": ["sf_ptetatau21_reweighting", "sf_hhbbww"]}
-    variations_by_sample[sample] = {"inclusive": ["sf_ptetatau21_reweighting", "sf_hhbbww"]}
+    weights_by_sample[sample] = {"inclusive": ["sf_hhbbww"]}
+    variations_by_sample[sample] = {"inclusive": ["sf_hhbbww"]}
 
 variables = {
     #**count_hist(name="nFatJetGood", coll="FatJetGood",bins=10, start=0, stop=10),
@@ -190,8 +186,7 @@ cfg = Configurator(
 
     weights_classes = common_weights + [
         SF_trigger_prescale,
-        # SF_ptetatau21_reweighting,
-        # SF_hhbbww,
+        SF_hhbbww,
     ],
     weights = {
         "common": {
