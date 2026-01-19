@@ -70,10 +70,10 @@ def sf_ptetatau21_reweighting(events, year, params):
 # HHbbww AK8 scale factors (per era) from correctionlib JSONs produced by export_correctionlib_all.py
 
 _HHBBWW_SF_PATHS = {
-    "2022_preEE": "/afs/cern.ch/work/a/aguzel/private/bbww_ak8_sf_derivation/ak8_sf_jsons/ak8_sf_corrections_bbww_combined_2022_preEE.json",
-    "2022_postEE": "/afs/cern.ch/work/a/aguzel/private/bbww_ak8_sf_derivation/ak8_sf_jsons/ak8_sf_corrections_bbww_combined_2022_postEE.json",
-    "2023_preBPix": "/afs/cern.ch/work/a/aguzel/private/bbww_ak8_sf_derivation/ak8_sf_jsons/ak8_sf_corrections_bbww_combined_2023_preBPix.json",
-    "2023_postBPix": "/afs/cern.ch/work/a/aguzel/private/bbww_ak8_sf_derivation/ak8_sf_jsons/ak8_sf_corrections_bbww_combined_2023_postBPix.json",
+    "2022_preEE": "/afs/cern.ch/user/a/aguzel/public/AK8SF/jsons/ak8_sf_corrections_bbww_combined_2022_preEE.json",
+    "2022_postEE": "/afs/cern.ch/user/a/aguzel/public/AK8SF/jsons/ak8_sf_corrections_bbww_combined_2022_postEE.json",
+    "2023_preBPix": "/afs/cern.ch/user/a/aguzel/public/AK8SF/jsons/ak8_sf_corrections_bbww_combined_2023_preBPix.json",
+    "2023_postBPix": "/afs/cern.ch/user/a/aguzel/public/AK8SF/jsons/ak8_sf_corrections_bbww_combined_2023_postBPix.json",
 }
 
 
