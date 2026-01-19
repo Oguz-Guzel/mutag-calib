@@ -96,12 +96,18 @@ def _hhbbww_per_jet_variations(corr, pt_flat, counts):
     tau21_up = corr.evaluate(pt_flat, "tau21Up")
     tau21_down = corr.evaluate(pt_flat, "tau21Down")
 
-    delta_sq = (
-        (up - nominal) ** 2
-        + (nominal - down) ** 2
-        + (tau21_up - nominal) ** 2
-        + (nominal - tau21_down) ** 2
+    # For potentially asymmetric uncertainties, take the max absolute deviation
+    # from the nominal for each source, then combine in quadrature.
+    delta_main = np.maximum(
+        np.abs(up - nominal),
+        np.abs(nominal - down),
     )
+    delta_tau21 = np.maximum(
+        np.abs(tau21_up - nominal),
+        np.abs(nominal - tau21_down),
+    )
+
+    delta_sq = delta_main**2 + delta_tau21**2
     sigma = np.sqrt(delta_sq)
 
     variants = {
