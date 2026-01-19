@@ -1,5 +1,11 @@
 from pocket_coffea.lib.weights.weights import WeightLambda
-from mutag_calib.configs.fatjet_base.custom.scale_factors import pt_reweighting, pteta_reweighting, sf_ptetatau21_reweighting, sf_trigger_prescale
+from mutag_calib.configs.fatjet_base.custom.scale_factors import (
+    pt_reweighting,
+    pteta_reweighting,
+    sf_ptetatau21_reweighting,
+    sf_trigger_prescale,
+    sf_hhbbww,
+)
 
 pt_weight = WeightLambda.wrap_func(
     name="pt_reweighting",
@@ -23,4 +29,15 @@ SF_ptetatau21_reweighting = WeightLambda.wrap_func(
     function=lambda params, metadata, events, size, shape_variations:
         sf_ptetatau21_reweighting(events, metadata['year'], params),
     has_variations=True
+)
+
+# Flavor-dispatched HHbbww SF: bb map for bb jets, cc map for cc jets, 1 otherwise.
+SF_hhbbww = WeightLambda.wrap_func(
+    name="sf_hhbbww",
+    function=lambda params, metadata, events, size, shape_variations: (
+        sf_hhbbww(events, metadata["year"], systematic="nominal"),
+        sf_hhbbww(events, metadata["year"], systematic="totalUp"),
+        sf_hhbbww(events, metadata["year"], systematic="totalDown"),
+    ),
+    has_variations=True,
 )

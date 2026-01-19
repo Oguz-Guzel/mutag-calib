@@ -1,6 +1,8 @@
 import awkward as ak
+import numpy as np
 
 import correctionlib
+from functools import lru_cache
 
 #from mutag_calib.configs.fatjet_base.custom.parameters.pt_reweighting.pt_reweighting import pt_corrections, pteta_corrections
 
@@ -63,3 +65,111 @@ def sf_ptetatau21_reweighting(events, year, params):
         weight[var] = ak.unflatten(w, nfatjet)
 
     return weight["nominal"], weight["statUp"], weight["statDown"]
+
+
+# HHbbww AK8 scale factors (per era) from correctionlib JSONs produced by export_correctionlib_all.py
+
+_HHBBWW_SF_PATHS = {
+    "2022_preEE": "/afs/cern.ch/user/a/aguzel/public/AK8SF/jsons/ak8_sf_corrections_bbww_combined_2022_preEE.json",
+    "2022_postEE": "/afs/cern.ch/user/a/aguzel/public/AK8SF/jsons/ak8_sf_corrections_bbww_combined_2022_postEE.json",
+    "2023_preBPix": "/afs/cern.ch/user/a/aguzel/public/AK8SF/jsons/ak8_sf_corrections_bbww_combined_2023_preBPix.json",
+    "2023_postBPix": "/afs/cern.ch/user/a/aguzel/public/AK8SF/jsons/ak8_sf_corrections_bbww_combined_2023_postBPix.json",
+}
+
+
+@lru_cache(maxsize=None)
+def _hhbbww_load(year: str):
+    path = _HHBBWW_SF_PATHS.get(year)
+    if path is None:
+        raise KeyError(f"No HHbbww SF path configured for year: {year}")
+    cset = correctionlib.CorrectionSet.from_file(path)
+    bb = cset[f"HHbbww_{year}_SF_bb"]
+    cc = cset[f"HHbbww_{year}_SF_cc"]
+    return bb, cc
+
+
+def _hhbbww_per_jet_variations(corr, pt_flat, counts):
+    # Evaluate all needed systematics to build a total symmetric uncertainty
+    nominal = corr.evaluate(pt_flat, "nominal")
+    up = corr.evaluate(pt_flat, "up")
+    down = corr.evaluate(pt_flat, "down")
+    tau21_up = corr.evaluate(pt_flat, "tau21Up")
+    tau21_down = corr.evaluate(pt_flat, "tau21Down")
+
+    # For potentially asymmetric uncertainties, take the max absolute deviation
+    # from the nominal for each source, then combine in quadrature.
+    delta_main = np.maximum(
+        np.abs(up - nominal),
+        np.abs(nominal - down),
+    )
+    delta_tau21 = np.maximum(
+        np.abs(tau21_up - nominal),
+        np.abs(nominal - tau21_down),
+    )
+
+    delta_sq = delta_main**2 + delta_tau21**2
+    sigma = np.sqrt(delta_sq)
+
+    variants = {
+        "nominal": nominal,
+        "totalUp": nominal + sigma,
+        "totalDown": nominal - sigma,
+    }
+
+    # Unflatten back to jet structure
+    return {k: ak.unflatten(v, counts) for k, v in variants.items()}
+
+
+def _hhbbww_variations(corr_bb, corr_cc, pt_flat, counts, flavor_flat, nbh_flat, nch_flat):
+    """Per-jet SF choosing bb or cc map based on gen flavor; others get weight 1."""
+    mask_bb = ak.unflatten((flavor_flat == 5) & (nbh_flat >= 2), counts)
+    mask_cc = ak.unflatten((flavor_flat == 4) & (nch_flat >= 2) & (nbh_flat == 0), counts)
+
+    # Evaluate both correction sets
+    bb_vars = _hhbbww_per_jet_variations(corr_bb, pt_flat, counts)
+    cc_vars = _hhbbww_per_jet_variations(corr_cc, pt_flat, counts)
+
+    variants = {}
+    for key in ["nominal", "totalUp", "totalDown"]:
+        v_bb = bb_vars[key]
+        v_cc = cc_vars[key]
+        # Start from 1 for non-bb/cc jets
+        ones = ak.ones_like(v_bb, dtype=float)
+        v = ak.where(mask_bb, v_bb, ones)
+        v = ak.where(mask_cc, v_cc, v)
+        variants[key] = v
+    return variants
+
+def sf_hhbbww(events, year, systematic="nominal"):
+    """Event-level HHbbww SF that dispatches bb/cc corrections per jet by flavor.
+
+    Jets identified as bb use the bb map; cc jets use the cc map; others get weight 1.
+    """
+    corr_bb, corr_cc = _hhbbww_load(year)
+
+    pt = events.FatJetGood.pt
+    counts = ak.num(pt)
+    pt_flat = ak.flatten(pt)
+    idx = ak.local_index(pt)
+
+    n_flavor = ak.num(events.FatJetGood.hadronFlavour)
+    n_bh = ak.num(events.FatJetGood.nBHadrons)
+    n_ch = ak.num(events.FatJetGood.nCHadrons)
+
+    # Align jet attributes to the pt jagged structure; fill missing entries with zeros.
+    flavor = ak.where(idx < n_flavor, events.FatJetGood.hadronFlavour, 0)
+    nbh = ak.where(idx < n_bh, events.FatJetGood.nBHadrons, 0)
+    nch = ak.where(idx < n_ch, events.FatJetGood.nCHadrons, 0)
+
+    flavor_flat = ak.flatten(flavor)
+    nbh_flat = ak.flatten(nbh)
+    nch_flat = ak.flatten(nch)
+
+    per_jet_variants = _hhbbww_variations(corr_bb, corr_cc, pt_flat, counts, flavor_flat, nbh_flat, nch_flat)
+    if systematic not in per_jet_variants:
+        raise ValueError("systematic must be one of: nominal, totalUp, totalDown")
+
+    per_jet = per_jet_variants[systematic]
+    leading = ak.fill_none(ak.firsts(per_jet), 1.0)
+    subleading = ak.fill_none(ak.pad_none(per_jet, 2)[:, 1], 1.0)
+    return leading * subleading
