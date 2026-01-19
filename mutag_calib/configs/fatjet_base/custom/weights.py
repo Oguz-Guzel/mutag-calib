@@ -34,15 +34,10 @@ SF_ptetatau21_reweighting = WeightLambda.wrap_func(
 # Flavor-dispatched HHbbww SF: bb map for bb jets, cc map for cc jets, 1 otherwise.
 SF_hhbbww = WeightLambda.wrap_func(
     name="sf_hhbbww",
-    function=lambda params, metadata, events, size, shape_variations: [
-        (
-            "sf_hhbbww",
-            sf_hhbbww(
-                events,
-                metadata["year"],
-                systematic=shape_variations.get("sf_hhbbww", "nominal"),
-            ),
-        )
-    ],
+    function=lambda params, metadata, events, size, shape_variations: (
+        sf_hhbbww(events, metadata["year"], systematic="nominal"),
+        sf_hhbbww(events, metadata["year"], systematic="totalUp"),
+        sf_hhbbww(events, metadata["year"], systematic="totalDown"),
+    ),
     has_variations=True,
 )
