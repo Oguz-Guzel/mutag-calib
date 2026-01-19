@@ -10,7 +10,11 @@ from pocket_coffea.parameters.histograms import *
 import mutag_calib
 from mutag_calib.configs.fatjet_base.custom.cuts import get_ptmsd, get_ptmsd_window, get_nObj_minmsd, get_flavor, get_ptbin, get_msdbin
 from mutag_calib.configs.fatjet_base.custom.functions import get_inclusive_wp
-from mutag_calib.configs.fatjet_base.custom.weights import SF_trigger_prescale
+from mutag_calib.configs.fatjet_base.custom.weights import (
+    SF_trigger_prescale,
+    SF_ptetatau21_reweighting,
+    SF_hhbbww,
+)
 import mutag_calib.workflows.mutag_oneMuAK8_processor as workflow
 from mutag_calib.workflows.mutag_oneMuAK8_processor import mutagAnalysisOneMuonInAK8Processor
 import os
@@ -34,15 +38,21 @@ parameters = defaults.merge_parameters_from_files(default_parameters,
 
 samples = [
     "QCD_MuEnriched",
-    "VJets",
-    "TTto4Q",
-    "SingleTop",
-    "DATA_BTagMu"
+    # "VJets",
+    # "TTto4Q",
+    # "SingleTop",
+    # "DATA_BTagMu"
 ]
 
 subsamples = {}
-for s in filter(lambda x: 'DATA_BTagMu' not in x, samples):
-    subsamples[s] = {f"{s}_{f}" : [get_flavor(f)] for f in ['l', 'c', 'b', 'cc', 'bb']}
+# Apply SFs at sample level; flavor dispatch happens inside the weight itself.
+weights_by_sample = {}
+variations_by_sample = {}
+for sample in samples:
+    if "DATA" in sample:
+        continue
+    weights_by_sample[sample] = {"inclusive": ["sf_ptetatau21_reweighting", "sf_hhbbww"]}
+    variations_by_sample[sample] = {"inclusive": ["sf_ptetatau21_reweighting", "sf_hhbbww"]}
 
 variables = {
     #**count_hist(name="nFatJetGood", coll="FatJetGood",bins=10, start=0, stop=10),
@@ -178,7 +188,11 @@ cfg = Configurator(
     preselections = [get_nObj_min(1, parameters.object_preselection["FatJet"]["pt"], "FatJetGood")],
     categories = CartesianSelection(multicuts=multicuts, common_cats=common_cats),
 
-    weights_classes = common_weights + [SF_trigger_prescale],
+    weights_classes = common_weights + [
+        SF_trigger_prescale,
+        # SF_ptetatau21_reweighting,
+        # SF_hhbbww,
+    ],
     weights = {
         "common": {
             "inclusive": ["genWeight","lumi","XS","sf_trigger_prescale",
@@ -186,8 +200,7 @@ cfg = Configurator(
             "bycategory" : {
             }
         },
-        "bysample": {
-        }
+        "bysample": weights_by_sample,
     },
 
     calibrators = [JetsCalibrator, JetsSoftdropMassCalibrator],
@@ -198,8 +211,7 @@ cfg = Configurator(
                 "bycategory" : {
                 }
             },
-            "bysample": {
-            }    
+            "bysample": variations_by_sample,
         },
         "shape": {
             "common": {

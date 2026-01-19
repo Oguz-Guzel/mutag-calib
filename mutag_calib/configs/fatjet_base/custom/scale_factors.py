@@ -70,10 +70,10 @@ def sf_ptetatau21_reweighting(events, year, params):
 # HHbbww AK8 scale factors (per era) from correctionlib JSONs produced by export_correctionlib_all.py
 
 _HHBBWW_SF_PATHS = {
-    "2022_preEE": "/afs/cern.ch/work/a/aguzel/private/bbww_ak8_sf_derivation/ak8_sf_jsons/sf_corrections_run3_2022_preEE.json",
-    "2022_postEE": "/afs/cern.ch/work/a/aguzel/private/bbww_ak8_sf_derivation/ak8_sf_jsons/sf_corrections_run3_2022_postEE.json",
-    "2023_preBPix": "/afs/cern.ch/work/a/aguzel/private/bbww_ak8_sf_derivation/ak8_sf_jsons/sf_corrections_run3_2023_preBPix.json",
-    "2023_postBPix": "/afs/cern.ch/work/a/aguzel/private/bbww_ak8_sf_derivation/ak8_sf_jsons/sf_corrections_run3_2023_postBPix.json",
+    "2022_preEE": "/afs/cern.ch/work/a/aguzel/private/bbww_ak8_sf_derivation/ak8_sf_jsons/ak8_sf_corrections_bbww_combined_2022_preEE.json",
+    "2022_postEE": "/afs/cern.ch/work/a/aguzel/private/bbww_ak8_sf_derivation/ak8_sf_jsons/ak8_sf_corrections_bbww_combined_2022_postEE.json",
+    "2023_preBPix": "/afs/cern.ch/work/a/aguzel/private/bbww_ak8_sf_derivation/ak8_sf_jsons/ak8_sf_corrections_bbww_combined_2023_preBPix.json",
+    "2023_postBPix": "/afs/cern.ch/work/a/aguzel/private/bbww_ak8_sf_derivation/ak8_sf_jsons/ak8_sf_corrections_bbww_combined_2023_postBPix.json",
 }
 
 
@@ -114,28 +114,46 @@ def _hhbbww_per_jet_variations(corr, pt_flat, counts):
     return {k: ak.unflatten(v, counts) for k, v in variants.items()}
 
 
-def sf_hhbbww(events, year, systematic="nominal", flavor="bb"):
-    """Event-level HHbbww SF using leading+subleading jets independently.
+def _hhbbww_variations(corr_bb, corr_cc, pt_flat, counts, flavor_flat, nbh_flat, nch_flat):
+    """Per-jet SF choosing bb or cc map based on gen flavor; others get weight 1."""
+    mask_bb = (flavor_flat == 5) & (nbh_flat >= 2)
+    mask_cc = (flavor_flat == 4) & (nch_flat >= 2) & (nbh_flat == 0)
 
-    systematic: nominal|totalUp|totalDown (total built from up/down/tau21Up/tau21Down in quadrature)
-    flavor: bb (uses HHbbww_*_SF_bb) or cc (uses HHbbww_*_SF_cc)
+    # Evaluate both correction sets
+    bb_vars = _hhbbww_per_jet_variations(corr_bb, pt_flat, counts)
+    cc_vars = _hhbbww_per_jet_variations(corr_cc, pt_flat, counts)
+
+    variants = {}
+    for key in ["nominal", "totalUp", "totalDown"]:
+        v_bb = bb_vars[key]
+        v_cc = cc_vars[key]
+        # Start from 1 for non-bb/cc jets
+        ones = ak.ones_like(v_bb, dtype=float)
+        v = ak.where(mask_bb, v_bb, ones)
+        v = ak.where(mask_cc, v_cc, v)
+        variants[key] = v
+    return variants
+
+def sf_hhbbww(events, year, systematic="nominal"):
+    """Event-level HHbbww SF that dispatches bb/cc corrections per jet by flavor.
+
+    Jets identified as bb use the bb map; cc jets use the cc map; others get weight 1.
     """
-    bb, cc = _hhbbww_load(year)
-    corr = bb if flavor == "bb" else cc if flavor == "cc" else None
-    if corr is None:
-        raise ValueError("flavor must be 'bb' or 'cc'")
+    corr_bb, corr_cc = _hhbbww_load(year)
 
     pt = events.FatJetGood.pt
     counts = ak.num(pt)
     pt_flat = ak.flatten(pt)
 
-    per_jet_variants = _hhbbww_per_jet_variations(corr, pt_flat, counts)
+    flavor_flat = ak.flatten(events.FatJetGood.hadronFlavour)
+    nbh_flat = ak.flatten(events.FatJetGood.nBHadrons)
+    nch_flat = ak.flatten(events.FatJetGood.nCHadrons)
+
+    per_jet_variants = _hhbbww_variations(corr_bb, corr_cc, pt_flat, counts, flavor_flat, nbh_flat, nch_flat)
     if systematic not in per_jet_variants:
         raise ValueError("systematic must be one of: nominal, totalUp, totalDown")
 
     per_jet = per_jet_variants[systematic]
-    # Extract leading and subleading; default to 1 when jet is missing
     leading = ak.fill_none(ak.firsts(per_jet), 1.0)
     subleading = ak.fill_none(ak.pad_none(per_jet, 2)[:, 1], 1.0)
-
     return leading * subleading

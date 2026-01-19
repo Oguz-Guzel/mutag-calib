@@ -31,38 +31,18 @@ SF_ptetatau21_reweighting = WeightLambda.wrap_func(
     has_variations=True
 )
 
-# HHbbww AK8 scale factors (per era) from correctionlib JSONs under ak8_sf_jsons/
-# Variations include: nominal, totalUp, totalDown (total combines up/down/tau21Up/tau21Down in quadrature).
-SF_hhbbww_bb = WeightLambda.wrap_func(
-    name="sf_hhbbww_bb",
-    function=lambda params, metadata, events, size, shape_variations:
-        [
-            (
-                "sf_hhbbww_bb",
-                sf_hhbbww(
-                    events,
-                    metadata['year'],
-                    systematic=shape_variations.get("sf_hhbbww_bb", "nominal"),
-                    flavor="bb",
-                ),
-            )
-        ],
-    has_variations=True,
-)
-
-SF_hhbbww_cc = WeightLambda.wrap_func(
-    name="sf_hhbbww_cc",
-    function=lambda params, metadata, events, size, shape_variations:
-        [
-            (
-                "sf_hhbbww_cc",
-                sf_hhbbww(
-                    events,
-                    metadata['year'],
-                    systematic=shape_variations.get("sf_hhbbww_cc", "nominal"),
-                    flavor="cc",
-                ),
-            )
-        ],
+# Flavor-dispatched HHbbww SF: bb map for bb jets, cc map for cc jets, 1 otherwise.
+SF_hhbbww = WeightLambda.wrap_func(
+    name="sf_hhbbww",
+    function=lambda params, metadata, events, size, shape_variations: [
+        (
+            "sf_hhbbww",
+            sf_hhbbww(
+                events,
+                metadata["year"],
+                systematic=shape_variations.get("sf_hhbbww", "nominal"),
+            ),
+        )
+    ],
     has_variations=True,
 )
