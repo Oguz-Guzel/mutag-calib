@@ -34,10 +34,10 @@ parameters = defaults.merge_parameters_from_files(default_parameters,
 
 samples = [
     "QCD_MuEnriched",
-    # "VJets",
-    # "TTto4Q",
-    # "SingleTop",
-    # "DATA_BTagMu"
+    "VJets",
+    "TTto4Q",
+    "SingleTop",
+    "DATA_BTagMu"
 ]
 
 subsamples = {}
