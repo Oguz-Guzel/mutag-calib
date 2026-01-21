@@ -1,14 +1,14 @@
 #!/bin/bash
 
 # filepath: run_combine_all.sh
-# Usage: ./run_cards.sh [datacards directory] [channel]
-# Both base_dir and channel are required. If not provided, print error and exit.
-if [ -z "$1" ] || [ -z "$2" ]; then
-  echo "Error: Usage: $0 [base_dir] [channel]" >&2
+# Usage: ./run_all_combine_fits.sh [datacards directory]
+# base_dir is required. If not provided, print error and exit.
+if [ -z "$1" ]; then
+  echo "Error: Usage: $0 [base_dir]" >&2
   return 1 2>/dev/null || exit 1
 fi
 base_dir="$1"
-channel="$2"
+channel="HHbbww"
 
 for d in $base_dir/202*/*/tau21*; do
   if [ -d "$d" ]; then
@@ -17,7 +17,7 @@ for d in $base_dir/202*/*/tau21*; do
     if [ -f combine_cards.sh ]; then
       source combine_cards.sh
       combine -M FitDiagnostics -d workspace.root --saveWorkspace \
-        --name .msd-80to170_Pt-300toInf_particleNet_XbbVsQCD-${channel} --cminDefaultMinimizerStrategy 2 \
+        --name .msd-80to170_Pt-300toInf_particleNet_XbbVsQCD-HHbbww --cminDefaultMinimizerStrategy 2 \
         --robustFit=1 --saveShapes --saveWithUncertainties --saveOverallShapes \
         --redefineSignalPOIs=r,SF_c,SF_light --setParameters SF_light=1 --freezeParameters SF_light \
         --robustHesse=1 --stepSize=0.001 --X-rtd=MINIMIZER_analytic --X-rtd MINIMIZER_MaxCalls=9999999 \
