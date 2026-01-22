@@ -103,7 +103,8 @@ def _get_poi_result(fit_s, poi: str) -> POIResult:
 def _systematic_category(
     res: POIResult,
     tau21_unc: Optional[float] = None,
-    msd_unc: Optional[float] = None,
+    msd_up: Optional[float] = None,
+    msd_down: Optional[float] = None,
 ) -> dict:
     content = [
         {"key": "nominal", "value": float(res.value)},
@@ -120,12 +121,13 @@ def _systematic_category(
             ]
         )
 
-    if msd_unc is not None:
-        msd_unc = float(msd_unc)
+    if msd_up is not None and msd_down is not None:
+        msd_up = float(msd_up)
+        msd_down = float(msd_down)
         content.extend(
             [
-                {"key": "msdUp", "value": float(res.value + msd_unc)},
-                {"key": "msdDown", "value": float(res.value - msd_unc)},
+                {"key": "msdUp", "value": float(res.value + msd_up)},
+                {"key": "msdDown", "value": float(res.value + msd_down)},
             ]
         )
 
@@ -141,7 +143,8 @@ def _pt_binning(
     pt_edges: List[float],
     res: POIResult,
     tau21_unc: Optional[float] = None,
-    msd_unc: Optional[float] = None,
+    msd_up: Optional[float] = None,
+    msd_down: Optional[float] = None,
 ) -> dict:
     if len(pt_edges) != 2:
         raise ValueError("This exporter expects exactly one pT bin (2 edges)")
@@ -149,7 +152,14 @@ def _pt_binning(
         "nodetype": "binning",
         "input": "pt",
         "edges": [float(pt_edges[0]), float(pt_edges[1])],
-        "content": [_systematic_category(res, tau21_unc=tau21_unc, msd_unc=msd_unc)],
+        "content": [
+            _systematic_category(
+                res,
+                tau21_unc=tau21_unc,
+                msd_up=msd_up,
+                msd_down=msd_down,
+            )
+        ],
         "flow": "clamp",
     }
 
@@ -161,11 +171,18 @@ def build_correction(
     nominal: POIResult,
     pt_edges: List[float],
     tau21_unc: float,
-    msd_unc: Optional[float] = None,
+    msd_up: Optional[float] = None,
+    msd_down: Optional[float] = None,
 ) -> dict:
-    data = _pt_binning(pt_edges, nominal, tau21_unc=tau21_unc, msd_unc=msd_unc)
+    data = _pt_binning(
+        pt_edges,
+        nominal,
+        tau21_unc=tau21_unc,
+        msd_up=msd_up,
+        msd_down=msd_down,
+    )
     syst_desc = "nominal|up|down|tau21Up|tau21Down"
-    if msd_unc is not None:
+    if msd_up is not None and msd_down is not None:
         syst_desc = syst_desc + "|msdUp|msdDown"
     inputs = [
         {
@@ -416,11 +433,16 @@ def main() -> None:
                 alt_res = values_by_poi[poi][year][alt]
                 tau21_unc = max(tau21_unc, abs(float(alt_res.value) - float(nominal.value)))
 
-            msd_unc: Optional[float] = None
+            msd_up: Optional[float] = None
+            msd_down: Optional[float] = None
             if msd_alt_patterns:
-                msd_unc = 0.0
-                for alt_res in msd_alt_values.get(poi, {}).get(year, {}).values():
-                    msd_unc = max(msd_unc, abs(float(alt_res.value) - float(nominal.value)))
+                shifts = [
+                    float(alt_res.value) - float(nominal.value)
+                    for alt_res in msd_alt_values.get(poi, {}).get(year, {}).values()
+                ]
+                if shifts:
+                    msd_up = max(shifts)
+                    msd_down = min(shifts)
 
             per_year_corrections.append(
                 build_correction(
@@ -430,7 +452,8 @@ def main() -> None:
                     nominal=nominal,
                     pt_edges=pt_edges,
                     tau21_unc=tau21_unc,
-                    msd_unc=msd_unc,
+                    msd_up=msd_up,
+                    msd_down=msd_down,
                 )
             )
 
