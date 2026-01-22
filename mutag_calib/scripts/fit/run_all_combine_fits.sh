@@ -14,9 +14,10 @@ for d in $base_dir/*/*tau21*; do
     echo "Processing $d"
     cd "$d"
     if [ -f combine_cards.sh ]; then
-      source combine_cards.sh
+      combineCards.py fail/datacard.txt pass/datacard.txt > datacard_combined.txt
+      text2workspace.py datacard_combined.txt -o workspace.root 
       combine -M FitDiagnostics -d workspace.root --saveWorkspace \
-        --name .msd-80to170_Pt-300toInf_particleNet_XbbVsQCD-HHbbww --cminDefaultMinimizerStrategy 2 \
+        --cminDefaultMinimizerStrategy 2 \
         --robustFit=1 --saveShapes --saveWithUncertainties --saveOverallShapes \
         --redefineSignalPOIs=r,SF_c,SF_light --setParameters SF_light=1 --freezeParameters SF_light \
         --robustHesse=1 --stepSize=0.001 --X-rtd=MINIMIZER_analytic --X-rtd MINIMIZER_MaxCalls=9999999 \
